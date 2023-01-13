@@ -1,0 +1,2 @@
+Original Path -> D:/SpeechRecognition
+Data -> D:/MLMI2.M2022/ etc etc
