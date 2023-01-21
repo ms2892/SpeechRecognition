@@ -10,7 +10,7 @@ from decoder import decode
 from utils import concat_inputs
 from models import BiLSTM
 from dataloader import get_dataloader
-from collections import namedtuple
+from collections import namedtuple,defaultdict
 
 
 def train(model, args):
@@ -19,7 +19,7 @@ def train(model, args):
     val_loader = get_dataloader(args.val_json, args.batch_size, False)
     criterion = CTCLoss(zero_infinity=True)
     optimiser = SGD(model.parameters(), lr=args.lr)
-
+    history=defaultdict(list)
     def train_one_epoch(epoch):
         running_loss = 0.
         last_loss = 0.
@@ -41,7 +41,7 @@ def train(model, args):
             outputs = log_softmax(model(inputs), dim=-1)
             loss = criterion(outputs, targets, in_lens, out_lens)
             loss.backward()
-
+            torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
             optimiser.step()
 
             running_loss += loss.item()
@@ -79,7 +79,13 @@ def train(model, args):
             val_loss = criterion(outputs, targets, in_lens, out_lens)
             running_val_loss += val_loss
         avg_val_loss = running_val_loss / len(val_loader)
+        avg_val_loss = avg_val_loss.to(torch.device('cpu')).item()
         val_decode = decode(model, args, args.val_json)
+        # print(type(avg_train_loss),type(val_decode[4]))
+        # t=input()
+        history['loss'].append(avg_train_loss)
+        history['val_loss'].append(avg_val_loss)
+        history['val_decode'].append(val_decode[4])
         print('LOSS train {:.5f} valid {:.5f}, valid PER {:.2f}%'.format(
             avg_train_loss, avg_val_loss, val_decode[4])
             )
@@ -88,7 +94,7 @@ def train(model, args):
             best_val_loss = avg_val_loss
             model_path = 'checkpoints/{}/model_{}'.format(timestamp, epoch + 1)
             torch.save(model.state_dict(), model_path)
-    return model_path
+    return model_path,history
 
 
 if __name__=='__main__':
