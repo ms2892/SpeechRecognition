@@ -8,8 +8,10 @@ from torch.nn.functional import log_softmax
 from torch.optim import SGD
 from decoder import decode
 from utils import concat_inputs
-
+from models import BiLSTM
 from dataloader import get_dataloader
+from collections import namedtuple
+
 
 def train(model, args):
     torch.manual_seed(args.seed)
@@ -87,3 +89,33 @@ def train(model, args):
             model_path = 'checkpoints/{}/model_{}'.format(timestamp, epoch + 1)
             torch.save(model.state_dict(), model_path)
     return model_path
+
+
+if __name__=='__main__':
+    #loader = get_dataloader('train_fbank.json',1,False)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    args = {
+        'seed': 123,
+        'train_json': 'train_fbank.json',
+        'val_json': 'dev_fbank.json',
+        'test_json': 'test_fbank.json',
+        'batch_size': 4,
+        'num_layers': 1,
+        'fbank_dims': 23,
+        'model_dims': 128,
+        'concat': 1,
+        'lr': 0.5,
+        'vocab': 'vocab_39.txt',
+        'report_interval': 50,
+        'num_epochs': 15,
+        'device': device,
+    }
+    
+    args = namedtuple('x', args)(**args)
+    temp_loader = get_dataloader('test_fbank.json',4,False)
+    fbank, lens, trans, dur = next(iter(temp_loader))
+    print(fbank.shape,lens,trans,dur)
+    model = BiLSTM(args['num_layers'],args.fbank_dims * args.concat, args.model_dims, len(args.vocab))
+    
+    
+    # train()
