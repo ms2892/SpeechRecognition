@@ -4,7 +4,7 @@ import torch
 from dataloader import get_dataloader
 from utils import concat_inputs
 
-def decode(model, args, json_file, char=False):
+def decode2(model, args, json_file, char=False):
     idx2grapheme = {y: x for x, y in args.vocab.items()}
     test_loader = get_dataloader(json_file, 1, False)
     stats = [0., 0., 0., 0.]
