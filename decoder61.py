@@ -4,7 +4,17 @@ import torch
 from dataloader import get_dataloader
 from utils import concat_inputs
 
-def decode(model, args, json_file, char=False,factor=0.0):
+mapping_vocab = {}
+
+with open('phone_map','r') as file:
+    for i in file:
+        splits=i.split(':')
+        mapping_vocab[splits[0].strip()]=splits[1].strip()
+        
+mapping_vocab['']='_'
+
+
+def decode(model, args, json_file, char=False):
     idx2grapheme = {y: x for x, y in args.vocab.items()}
     test_loader = get_dataloader(json_file, 1, False)
     stats = [0., 0., 0., 0.]
@@ -15,14 +25,20 @@ def decode(model, args, json_file, char=False,factor=0.0):
         inputs, in_lens = concat_inputs(inputs, in_lens, factor=args.concat)
         with torch.no_grad():
             outputs = torch.nn.functional.softmax(model(inputs), dim=-1)
-#             print(outputs)
-            outputs[:,:,0] = outputs[:,:,0] -  factor*torch.ones_like(outputs[:,:,0])
-#             print(outputs)
+#             outputs = outputs[:][:][0] - 0.25
             outputs = torch.argmax(outputs, dim=-1).transpose(0, 1)
         outputs = [[idx2grapheme[i] for i in j] for j in outputs.tolist()]
         outputs = [[v for i, v in enumerate(j) if i == 0 or v != j[i - 1]] for j in outputs]
         outputs = [list(filter(lambda elem: elem != "_", i)) for i in outputs]
-        outputs = [" ".join(i) for i in outputs]
+        
+#         print(outputs)
+        
+        outputs = [" ".join([mapping_vocab[j] for j in i]) for i in outputs]
+        
+        
+        
+        
+#         print(outputs)
         if char:
             cur_stats = cer(trans, outputs, return_dict=True)
         else:
