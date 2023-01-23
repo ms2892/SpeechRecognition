@@ -1,4 +1,4 @@
-_
+sil
 aa
 ae
 ah
@@ -37,8 +37,8 @@ k
 kcl
 l
 m
-n
 ng
+n
 nx
 ow
 oy
@@ -49,7 +49,6 @@ q
 r
 s
 sh
-sil
 t
 tcl
 th
@@ -61,3 +60,4 @@ w
 y
 z
 zh
+_
