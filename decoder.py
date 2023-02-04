@@ -15,6 +15,7 @@ def decode(model, args, json_file, char=False):
         inputs, in_lens = concat_inputs(inputs, in_lens, factor=args.concat)
         with torch.no_grad():
             outputs = torch.nn.functional.softmax(model(inputs), dim=-1)
+#             outputs = outputs[:][:][0] - 0.25
             outputs = torch.argmax(outputs, dim=-1).transpose(0, 1)
         outputs = [[idx2grapheme[i] for i in j] for j in outputs.tolist()]
         outputs = [[v for i, v in enumerate(j) if i == 0 or v != j[i - 1]] for j in outputs]
